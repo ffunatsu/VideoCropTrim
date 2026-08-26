@@ -1,0 +1,21 @@
+[package]
+name = "video_crop_trim"
+version = "0.1.0"
+edition = "2021"
+authors = ["VideoCropTrim Developers"]
+description = "QuickTime/Preview style Video Spatial Crop & Temporal Trim application for Windows"
+
+[dependencies]
+eframe = "0.31"
+egui = "0.31"
+rfd = "0.15"
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+crossbeam-channel = "0.5"
+parking_lot = "0.12"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+regex = "1.11"
+tempfile = "3.17"
+chrono = "0.4"
+open = "5.3"
+
