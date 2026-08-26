@@ -8,6 +8,7 @@ Video crop & trim app (made with Rust)
 ## Requirements
 
 - FFmpeg (`ffmpeg` and `ffprobe`) must be installed and available in your PATH.
+  - For windows users: for example, use [btbn/ffmpeg-builds](https://github.com/btbn/ffmpeg-builds/releases) 
 
 ## Screenshots
 
