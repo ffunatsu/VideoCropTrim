@@ -74,7 +74,7 @@ pub struct AvailableEncoders {
 
 impl AvailableEncoders {
     pub fn detect() -> Self {
-        let output = Command::new("ffmpeg")
+        let output = crate::utils::process::create_hidden_command("ffmpeg")
             .args(["-encoders", "-v", "quiet"])
             .output();
 
@@ -118,7 +118,7 @@ fn run_export_thread(
 
     let total_target_duration = (settings.end_time - settings.start_time).max(0.001);
 
-    let mut cmd = Command::new("ffmpeg");
+    let mut cmd = crate::utils::process::create_hidden_command("ffmpeg");
     cmd.arg("-y"); // Overwrite output
 
     // Time seeking before input for fast seek

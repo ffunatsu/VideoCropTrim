@@ -147,7 +147,7 @@ fn extract_frame_ffmpeg(path: &Path, timestamp: f64) -> Option<ColorImage> {
     let ts_str = format!("{:.3}", timestamp.max(0.0));
 
     // Fast seek with -ss before -i for keyframe seeking, or combined for precision
-    let mut child = Command::new("ffmpeg")
+    let mut child = crate::utils::process::create_hidden_command("ffmpeg")
         .args([
             "-ss", &ts_str,
             "-i",

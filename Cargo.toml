@@ -1,6 +1,6 @@
 [package]
 name = "video_crop_trim"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 authors = ["VideoCropTrim Developers"]
 description = "QuickTime/Preview style Video Spatial Crop & Temporal Trim application for Windows"

@@ -53,7 +53,7 @@ impl VideoMetadata {
             .unwrap_or(0);
 
         // Try ffprobe first
-        let output = Command::new("ffprobe")
+        let output = crate::utils::process::create_hidden_command("ffprobe")
             .args([
                 "-v", "quiet",
                 "-print_format", "json",
@@ -165,7 +165,7 @@ impl VideoMetadata {
         file_name: String,
         file_size_bytes: u64,
     ) -> Result<Self, String> {
-        let output = Command::new("ffmpeg")
+        let output = crate::utils::process::create_hidden_command("ffmpeg")
             .arg("-i")
             .arg(path)
             .output()
