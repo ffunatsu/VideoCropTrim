@@ -14,7 +14,7 @@ set -euo pipefail
 
 APP_NAME="VideoCropTrim"
 BUNDLE_ID="com.videocroptrim.app"
-VERSION="0.1.0"
+VERSION="0.1.2"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 OUTPUT_DIR="${ROOT_DIR}/target/mac_bundle"
