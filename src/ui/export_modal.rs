@@ -236,7 +236,9 @@ impl ExportModal {
 
                                     // Hardware acceleration badge
                                     if self.codec == VideoCodecOption::H264Auto || self.codec == VideoCodecOption::H265Auto {
-                                        if self.encoders.nvenc_h264 || self.encoders.nvenc_hevc {
+                                        if self.encoders.videotoolbox_h264 || self.encoders.videotoolbox_hevc {
+                                            ui.label(RichText::new("⚡ VideoToolbox (Apple HW) Active").size(11.0).color(Color32::from_rgb(120, 220, 150)));
+                                        } else if self.encoders.nvenc_h264 || self.encoders.nvenc_hevc {
                                             ui.label(RichText::new("⚡ NVENC Active").size(11.0).color(Color32::from_rgb(120, 220, 120)));
                                         } else if self.encoders.qsv_h264 || self.encoders.qsv_hevc {
                                             ui.label(RichText::new("⚡ Intel QSV Active").size(11.0).color(Color32::from_rgb(120, 200, 255)));

@@ -23,10 +23,13 @@ pub struct VideoCropTrimApp {
     pub crop_mode_enabled: bool,
     pub show_metadata_details: bool,
     pub last_requested_time: f64,
+    pub ffmpeg_available: bool,
+    pub error_message: Option<String>,
 }
 
 impl Default for VideoCropTrimApp {
     fn default() -> Self {
+        let ffmpeg_available = crate::utils::process::is_ffmpeg_installed();
         Self {
             metadata: None,
             decoder: VideoDecoder::new(),
@@ -39,6 +42,8 @@ impl Default for VideoCropTrimApp {
             crop_mode_enabled: true,
             show_metadata_details: false,
             last_requested_time: -1.0,
+            ffmpeg_available,
+            error_message: None,
         }
     }
 }
@@ -49,7 +54,27 @@ impl VideoCropTrimApp {
         Self::default()
     }
 
+    pub fn recheck_ffmpeg(&mut self) {
+        crate::utils::process::ensure_path_env();
+        self.ffmpeg_available = crate::utils::process::is_ffmpeg_installed();
+        if self.ffmpeg_available {
+            self.error_message = None;
+            self.export_modal.encoders = crate::video::AvailableEncoders::detect();
+        }
+    }
+
     pub fn load_video(&mut self, path: &Path) {
+        if !self.ffmpeg_available {
+            self.recheck_ffmpeg();
+            if !self.ffmpeg_available {
+                self.error_message = Some(
+                    "FFmpeg is not installed or not found in PATH.".to_string(),
+                );
+                return;
+            }
+        }
+
+        self.error_message = None;
         match VideoMetadata::probe(path) {
             Ok(meta) => {
                 let duration = meta.duration;
@@ -68,6 +93,7 @@ impl VideoCropTrimApp {
             }
             Err(e) => {
                 eprintln!("Failed to probe video: {}", e);
+                self.error_message = Some(format!("Failed to load video: {}", e));
             }
         }
     }
@@ -211,6 +237,7 @@ impl eframe::App for VideoCropTrimApp {
         }
 
         // TOP BAR
+        let mut dismiss_error = false;
         egui::TopBottomPanel::top("top_toolbar").show(ctx, |ui| {
             ui.add_space(4.0);
             ui.horizontal(|ui| {
@@ -218,6 +245,18 @@ impl eframe::App for VideoCropTrimApp {
 
                 if ui.button("📂 Open Video").on_hover_text("Open video file (Ctrl+O)").clicked() {
                     self.open_file_dialog();
+                }
+
+                if !self.ffmpeg_available {
+                    ui.separator();
+                    ui.label(
+                        RichText::new("⚠️ FFmpeg is not installed")
+                            .color(Color32::from_rgb(255, 120, 100))
+                            .strong(),
+                    );
+                    if ui.button("🔄 Recheck").on_hover_text("Recheck PATH and FFmpeg installation status").clicked() {
+                        self.recheck_ffmpeg();
+                    }
                 }
 
                 if let Some(ref meta) = self.metadata {
@@ -290,8 +329,28 @@ impl eframe::App for VideoCropTrimApp {
                     });
                 }
             });
+
+            // Error banner if any
+            if let Some(ref err) = self.error_message {
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    ui.label(
+                        RichText::new(format!("⚠️ {}", err))
+                            .color(Color32::from_rgb(255, 100, 100))
+                            .size(13.0),
+                    );
+                    if ui.small_button("✕").clicked() {
+                        dismiss_error = true;
+                    }
+                });
+            }
+
             ui.add_space(4.0);
         });
+
+        if dismiss_error {
+            self.error_message = None;
+        }
 
         // BOTTOM BAR (TIMELINE & TRANSPORT)
         if self.metadata.is_some() {
@@ -416,16 +475,20 @@ where
     let avail = ui.available_size();
     let center = ui.min_rect().min + avail / 2.0;
 
-    let drop_box_rect = Rect::from_center_size(center, vec2(500.0, 280.0));
+    let drop_box_rect = Rect::from_center_size(center, vec2(520.0, 290.0));
     let is_hovered = ui.rect_contains_pointer(drop_box_rect);
 
-    let border_color = if is_hovered {
+    let border_color = if !app.ffmpeg_available {
+        Color32::from_rgb(220, 80, 80)
+    } else if is_hovered {
         Color32::from_rgb(255, 190, 40)
     } else {
         Color32::from_rgb(60, 65, 78)
     };
 
-    let bg_color = if is_hovered {
+    let bg_color = if !app.ffmpeg_available {
+        Color32::from_rgb(38, 26, 28)
+    } else if is_hovered {
         Color32::from_rgb(32, 35, 42)
     } else {
         Color32::from_rgb(24, 26, 31)
@@ -441,37 +504,72 @@ where
 
     ui.allocate_new_ui(egui::UiBuilder::new().max_rect(drop_box_rect), |ui| {
         ui.vertical_centered(|ui| {
-            ui.add_space(45.0);
-            ui.label(
-                RichText::new("🎬")
-                    .size(48.0),
-            );
-            ui.add_space(10.0);
-            ui.label(
-                RichText::new("Drag & Drop Video Here")
-                    .strong()
-                    .size(20.0)
-                    .color(Color32::WHITE),
-            );
-            ui.add_space(6.0);
-            ui.label(
-                RichText::new("Supports MP4 (H.264 / H.265), MOV, MKV, WebM, AVI...")
-                    .size(13.0)
-                    .color(Color32::from_rgb(160, 165, 175)),
-            );
-            ui.add_space(24.0);
-
-            let open_btn = ui.add_sized(
-                [160.0, 32.0],
-                egui::Button::new(
-                    RichText::new("Browse Files...")
+            if !app.ffmpeg_available {
+                ui.add_space(35.0);
+                ui.label(
+                    RichText::new("⚠️")
+                        .size(44.0),
+                );
+                ui.add_space(8.0);
+                ui.label(
+                    RichText::new("FFmpeg is not installed")
                         .strong()
-                        .color(Color32::WHITE),
-                ),
-            );
+                        .size(20.0)
+                        .color(Color32::from_rgb(255, 120, 110)),
+                );
+                ui.add_space(6.0);
+                ui.label(
+                    RichText::new("FFmpeg is required to load and export videos.\nPlease install FFmpeg or add it to your PATH.")
+                        .size(13.0)
+                        .color(Color32::from_rgb(200, 190, 190)),
+                );
+                ui.add_space(20.0);
 
-            if open_btn.clicked() {
-                on_click_open(app);
+                let recheck_btn = ui.add_sized(
+                    [160.0, 32.0],
+                    egui::Button::new(
+                        RichText::new("🔄 Recheck FFmpeg")
+                            .strong()
+                            .color(Color32::WHITE),
+                    ),
+                );
+
+                if recheck_btn.clicked() {
+                    app.recheck_ffmpeg();
+                }
+            } else {
+                ui.add_space(45.0);
+                ui.label(
+                    RichText::new("🎬")
+                        .size(48.0),
+                );
+                ui.add_space(10.0);
+                ui.label(
+                    RichText::new("Drag & Drop Video Here")
+                        .strong()
+                        .size(20.0)
+                        .color(Color32::WHITE),
+                );
+                ui.add_space(6.0);
+                ui.label(
+                    RichText::new("Supports MP4 (H.264 / H.265), MOV, MKV, WebM, AVI...")
+                        .size(13.0)
+                        .color(Color32::from_rgb(160, 165, 175)),
+                );
+                ui.add_space(24.0);
+
+                let open_btn = ui.add_sized(
+                    [160.0, 32.0],
+                    egui::Button::new(
+                        RichText::new("Browse Files...")
+                            .strong()
+                            .color(Color32::WHITE),
+                    ),
+                );
+
+                if open_btn.clicked() {
+                    on_click_open(app);
+                }
             }
         });
     });

@@ -9,6 +9,9 @@ use app::VideoCropTrimApp;
 use eframe::egui;
 
 fn main() -> eframe::Result<()> {
+    // Ensure PATH environment variable includes Homebrew / MacPorts / user bins on macOS/Linux
+    utils::process::ensure_path_env();
+
     let native_options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([1150.0, 780.0])

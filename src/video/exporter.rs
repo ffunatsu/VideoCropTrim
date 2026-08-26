@@ -70,6 +70,8 @@ pub struct AvailableEncoders {
     pub qsv_hevc: bool,
     pub amf_h264: bool,
     pub amf_hevc: bool,
+    pub videotoolbox_h264: bool,
+    pub videotoolbox_hevc: bool,
 }
 
 impl AvailableEncoders {
@@ -87,6 +89,8 @@ impl AvailableEncoders {
             enc.qsv_hevc = s.contains("hevc_qsv");
             enc.amf_h264 = s.contains("h264_amf");
             enc.amf_hevc = s.contains("hevc_amf");
+            enc.videotoolbox_h264 = s.contains("h264_videotoolbox");
+            enc.videotoolbox_hevc = s.contains("hevc_videotoolbox");
         }
         enc
     }
@@ -150,7 +154,13 @@ fn run_export_thread(
     } else {
         let (codec_name, crf_param, crf_val) = match settings.codec {
             VideoCodecOption::H264Auto => {
-                if encoders.nvenc_h264 {
+                if encoders.videotoolbox_h264 {
+                    ("h264_videotoolbox", "-q:v", match settings.quality {
+                        QualityPreset::High => "75",
+                        QualityPreset::Medium => "60",
+                        QualityPreset::Low => "45",
+                    })
+                } else if encoders.nvenc_h264 {
                     ("h264_nvenc", "-cq", match settings.quality {
                         QualityPreset::High => "19",
                         QualityPreset::Medium => "24",
@@ -173,7 +183,13 @@ fn run_export_thread(
                 }
             }
             VideoCodecOption::H265Auto => {
-                if encoders.nvenc_hevc {
+                if encoders.videotoolbox_hevc {
+                    ("hevc_videotoolbox", "-q:v", match settings.quality {
+                        QualityPreset::High => "75",
+                        QualityPreset::Medium => "60",
+                        QualityPreset::Low => "45",
+                    })
+                } else if encoders.nvenc_hevc {
                     ("hevc_nvenc", "-cq", match settings.quality {
                         QualityPreset::High => "21",
                         QualityPreset::Medium => "26",
