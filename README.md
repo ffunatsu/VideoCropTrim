@@ -15,4 +15,4 @@ Video crop & trim app (made with Rust)
 
 ## License
 
-GPL (see [LICENSE](LICENSE))
+GPL v2 (see [LICENSE](LICENSE))
