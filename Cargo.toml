@@ -4,6 +4,7 @@ version = "0.1.1"
 edition = "2021"
 authors = ["VideoCropTrim Developers"]
 description = "QuickTime/Preview style Video Spatial Crop & Temporal Trim application for Windows"
+license = "0BSD"
 
 [dependencies]
 eframe = "0.31"
