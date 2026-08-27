@@ -1,5 +1,13 @@
 # VideoCropTrim
 
+<table>
+<tr>
+<td><img src="docs/screenshot1.png"></td>
+<td><img src="docs/screenshot2.png"></td>
+<td><img src="docs/screenshot3.png"></td>
+</tr>
+</table>
+
 Video crop & trim app (made with Rust, works on Win/Mac/Linux)
 
 > [!Note]
